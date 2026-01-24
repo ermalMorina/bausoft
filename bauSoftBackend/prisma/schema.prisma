@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  password       String
+  company_name   String?
+  company_address String?
+  vat_number     String?
+  created_at     DateTime  @default(now())
+  
+  clients        Client[]
+  invoices       Invoice[]
+}
+
+model Client {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  name      String
+  address   String?
+  email     String?
+  phone     String?
+  created_at DateTime  @default(now())
+  
+  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
+}
+
+model Invoice {
+  id             Int       @id @default(autoincrement())
+  user_id        Int
+  client_id      Int
+  invoice_number String    @unique
+  issue_date     DateTime
+  due_date       DateTime
+  status         String    @default("draft") // draft, sent, paid, overdue
+  subtotal       Decimal   @default(0)
+  tax_total      Decimal   @default(0)
+  total          Decimal   @default(0)
+  created_at     DateTime  @default(now())
+  
+  user           User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  client         Client    @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  items          InvoiceItem[]
+}
+
+model InvoiceItem {
+  id          Int      @id @default(autoincrement())
+  invoice_id  Int
+  description String
+  quantity    Decimal  @default(1)
+  unit_price  Decimal
+  tax_rate    Decimal  @default(0)
+  line_total  Decimal  @default(0)
+  
+  invoice     Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+}
