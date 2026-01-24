@@ -14,6 +14,6 @@ cd ios
 pod install
 cd ..
 
-echo "✅ iOS project setup complete!"
+echo "iOS project setup complete!"
 echo "You can now open the project in Xcode:"
 echo "  open ios/bauSoftApp.xcworkspace"

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo/AppEntry.js",
   "scripts": {
+    "dev": "expo start",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -12,6 +13,7 @@
     "ios:pod": "cd ios && pod install && cd .."
   },
   "dependencies": {
+    "@babel/runtime": "^7.24.0",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/native-stack": "^6.9.17",
     "expo": "~51.0.0",

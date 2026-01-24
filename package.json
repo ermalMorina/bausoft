@@ -1,0 +1,35 @@
+{
+  "name": "bausoft-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "bauSoft monorepo - Construction Business Management",
+  "workspaces": [
+    "bauSoftApp",
+    "bauSoftBackend"
+  ],
+  "overrides": {
+    "metro": "0.80.12",
+    "metro-config": "0.80.12",
+    "metro-core": "0.80.12",
+    "metro-resolver": "0.80.12",
+    "metro-runtime": "0.80.12"
+  },
+  "scripts": {
+    "dev": "echo 'Run dev:app and dev:backend in separate terminals to avoid file watcher limits'",
+    "dev:app": "npm run dev --workspace=bausoft-app",
+    "dev:backend": "npm run dev --workspace=bausoft-backend",
+    "build": "npm run build --workspace=bausoft-backend",
+    "build:app": "npm run build --workspace=bausoft-app",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules bauSoftApp/node_modules bauSoftBackend/node_modules bauSoftApp/dist bauSoftBackend/dist bauSoftApp/.expo",
+    "install:all": "npm install",
+    "prisma:generate": "npm run prisma:generate --workspace=bausoft-backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace=bausoft-backend",
+    "prisma:studio": "npm run prisma:studio --workspace=bausoft-backend"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
