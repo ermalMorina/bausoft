@@ -24,7 +24,8 @@
     "install:all": "npm install",
     "prisma:generate": "npm run prisma:generate --workspace=bausoft-backend",
     "prisma:migrate": "npm run prisma:migrate --workspace=bausoft-backend",
-    "prisma:studio": "npm run prisma:studio --workspace=bausoft-backend"
+    "prisma:studio": "npm run prisma:studio --workspace=bausoft-backend",
+    "create-user": "npm run create-default-user --workspace=bausoft-backend"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

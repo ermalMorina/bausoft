@@ -26,7 +26,7 @@ const yoga = createYoga({
   schema,
   // Enable CORS so frontend can access it
   cors: {
-    origin: 'http://localhost:5173', // frontend dev server
+    origin: ['http://localhost:5173', 'http://localhost:8081', '*'], // Allow React Native and web
     credentials: true,
   },
   context: () => ({ prisma }),

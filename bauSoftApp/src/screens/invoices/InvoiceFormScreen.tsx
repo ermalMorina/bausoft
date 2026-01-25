@@ -115,7 +115,7 @@ export default function InvoiceFormScreen() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
     if (!businessInfo.companyName.trim()) {
       Alert.alert('Error', 'Please enter company name');
@@ -144,21 +144,26 @@ export default function InvoiceFormScreen() {
       },
     };
 
-    if (isEditing && existingInvoice) {
-      updateInvoice(existingInvoice.id, invoiceData);
-      Alert.alert('Success', 'Invoice updated', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
-    } else {
-      const newInvoice = addInvoice(invoiceData);
-      Alert.alert('Success', 'Invoice created', [
-        {
-          text: 'View',
-          onPress: () =>
-            navigation.replace('InvoiceDetail', { invoiceId: newInvoice.id }),
-        },
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+    try {
+      if (isEditing && existingInvoice) {
+        const a = await updateInvoice(existingInvoice.id, invoiceData);
+        console.log('earmal Updated invoice:', a);
+        Alert.alert('Success', 'Invoice updated', [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } else {
+        const newInvoice = await addInvoice(invoiceData);
+        Alert.alert('Success', 'Invoice created', [
+          {
+            text: 'View',
+            onPress: () =>
+              navigation.replace('InvoiceDetail', { invoiceId: newInvoice.id }),
+          },
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      }
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to save invoice');
     }
   };
 

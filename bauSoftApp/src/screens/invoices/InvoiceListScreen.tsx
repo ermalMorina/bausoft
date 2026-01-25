@@ -67,11 +67,11 @@ export default function InvoiceListScreen() {
           €{item.grandTotal.toFixed(2)}
         </Text>
       </View>
-      {item.paymentInfo.remainingBalance > 0 && (
+      {item.paymentInfo.remainingBalance > 0 ? (
         <Text style={styles.balanceText}>
           Balance: €{item.paymentInfo.remainingBalance.toFixed(2)}
         </Text>
-      )}
+      ) : null}
     </TouchableOpacity>
   );
 

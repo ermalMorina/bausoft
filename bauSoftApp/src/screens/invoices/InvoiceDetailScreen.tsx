@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -45,20 +45,36 @@ const statusColors: Record<InvoiceStatus, string> = {
 export default function InvoiceDetailScreen() {
   const route = useRoute<RoutePropType>();
   const navigation = useNavigation<NavigationProp>();
-  const { getInvoice, updateInvoice, duplicateInvoice, deleteInvoice } =
+  const { getInvoice, updateInvoice, duplicateInvoice, deleteInvoice, refreshInvoices, invoices } =
     useInvoices();
 
-  const invoice = getInvoice(route.params.invoiceId);
+  // Get fresh invoice from context whenever invoices change - this ensures re-render
+  const invoice = React.useMemo(() => {
+    const inv = getInvoice(route.params.invoiceId);
+    console.log('=== InvoiceDetailScreen: useMemo ===');
+    console.log('Looking for invoice ID:', route.params.invoiceId);
+    console.log('Found invoice:', inv ? { id: inv.id, status: inv.status, paymentInfo: inv.paymentInfo } : 'NOT FOUND');
+    console.log('Total invoices in context:', invoices.length);
+    console.log('All invoice IDs:', invoices.map(i => i.id));
+    return inv;
+  }, [getInvoice, route.params.invoiceId, invoices]);
+  
+  // Refresh invoice when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refreshInvoices();
+    });
+    return unsubscribe;
+  }, [navigation, refreshInvoices]);
+  
+  // Re-fetch invoice when invoices list changes
+  useEffect(() => {
+    if (invoice && invoice.id.startsWith('inv_')) {
+      // If it's a temporary ID, try to refresh to get the real ID
+      refreshInvoices();
+    }
+  }, [invoices.length, refreshInvoices, invoice]);
 
-  if (!invoice) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Invoice not found</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -69,22 +85,63 @@ export default function InvoiceDetailScreen() {
     });
   };
 
-  const handleMarkAsSent = () => {
-    updateInvoice(invoice.id, { status: 'sent' });
-    Alert.alert('Success', 'Invoice marked as sent');
+  const handleMarkAsSent = async () => {
+    try {
+      console.log('Marking invoice as sent:', invoice.id);
+      const a = await updateInvoice(invoice.id, { status: 'sent' });
+      console.log('ermal Updated invoice:', a);
+      // Force refresh to get latest data
+      await refreshInvoices();
+      Alert.alert('Success', 'Invoice marked as sent');
+    } catch (error: any) {
+      console.error('Error marking as sent:', error);
+      Alert.alert('Error', error.message || 'Failed to update invoice');
+    }
   };
 
-  const handleMarkAsPaid = () => {
-    updateInvoice(invoice.id, {
-      status: 'paid',
-      paymentInfo: {
-        ...invoice.paymentInfo,
-        paidAmount: invoice.grandTotal,
-        remainingBalance: 0,
-        paymentDate: new Date().toISOString(),
-      },
-    });
-    Alert.alert('Success', 'Invoice marked as paid');
+  const handleMarkAsPaid = async () => {
+    try {
+      console.log('=== handleMarkAsPaid START ===');
+      console.log('Invoice ID:', invoice.id);
+      console.log('Current invoice status:', invoice.status);
+      console.log('Current paymentInfo:', invoice.paymentInfo);
+      console.log('Current grandTotal:', invoice.grandTotal);
+      
+      const updates = {
+        status: 'paid' as const,
+        paymentInfo: {
+          ...invoice.paymentInfo,
+          paidAmount: invoice.grandTotal,
+          remainingBalance: 0,
+          paymentDate: new Date().toISOString(),
+        },
+      };
+      
+      console.log('Sending updates to updateInvoice:', updates);
+      const result = await updateInvoice(invoice.id, updates);
+      console.log('updateInvoice returned:', result);
+      console.log('Result status:', result?.status);
+      console.log('Result paymentInfo:', result?.paymentInfo);
+      
+      // Force refresh to get latest data
+      console.log('Refreshing invoices from backend...');
+      await refreshInvoices();
+      console.log('Refresh complete');
+      
+      // Get updated invoice after refresh
+      const updatedInvoice = getInvoice(invoice.id);
+      console.log('Invoice after refresh:', updatedInvoice);
+      console.log('Updated invoice status:', updatedInvoice?.status);
+      console.log('Updated invoice paymentInfo:', updatedInvoice?.paymentInfo);
+      console.log('=== handleMarkAsPaid END ===');
+      
+      Alert.alert('Success', 'Invoice marked as paid');
+    } catch (error: any) {
+      console.error('=== handleMarkAsPaid ERROR ===');
+      console.error('Error marking as paid:', error);
+      console.error('Error stack:', error.stack);
+      Alert.alert('Error', error.message || 'Failed to update invoice');
+    }
   };
 
   const handleDuplicate = () => {
@@ -184,8 +241,21 @@ export default function InvoiceDetailScreen() {
     navigation.navigate('InvoiceForm', { invoiceId: invoice.id });
   };
 
+  // Force re-render when invoice changes by using invoice ID as key
+  if (!invoice) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Invoice not found</Text>
+          <Text style={styles.errorText}>ID: {route.params.invoiceId}</Text>
+          <Text style={styles.errorText}>Available IDs: {invoices.map(i => i.id).join(', ')}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView key={`invoice-${invoice.id}-${invoice.updatedAt}`} style={styles.container}>
       <ScrollView style={styles.scrollView}>
         {/* Header */}
         <View style={styles.header}>
@@ -193,6 +263,10 @@ export default function InvoiceDetailScreen() {
             <View>
               <Text style={styles.invoiceNumber}>{invoice.invoiceNumber}</Text>
               <Text style={styles.statusLabel}>Status</Text>
+              {/* Debug info - remove in production */}
+              <Text style={{ fontSize: 10, color: '#999', marginTop: 4 }}>
+                ID: {invoice.id} | Updated: {new Date(invoice.updatedAt).toLocaleTimeString()}
+              </Text>
             </View>
             <View
               style={[
@@ -214,9 +288,9 @@ export default function InvoiceDetailScreen() {
           <Text style={styles.sectionTitle}>From</Text>
           <Text style={styles.businessName}>{invoice.businessInfo.companyName}</Text>
           <Text style={styles.address}>{invoice.businessInfo.address}</Text>
-          {invoice.businessInfo.vatNumber && String(invoice.businessInfo.vatNumber).trim() !== '' && (
+          {invoice.businessInfo.vatNumber && String(invoice.businessInfo.vatNumber).trim() !== '' ? (
             <Text style={styles.vat}>VAT: {invoice.businessInfo.vatNumber}</Text>
-          )}
+          ) : null}
         </View>
 
         {/* Client Info */}
@@ -224,12 +298,12 @@ export default function InvoiceDetailScreen() {
           <Text style={styles.sectionTitle}>To</Text>
           <Text style={styles.clientName}>{invoice.clientInfo.name}</Text>
           <Text style={styles.address}>{invoice.clientInfo.address}</Text>
-          {invoice.clientInfo.email && String(invoice.clientInfo.email).trim() !== '' && (
+          {invoice.clientInfo.email && String(invoice.clientInfo.email).trim() !== '' ? (
             <Text style={styles.contact}>{invoice.clientInfo.email}</Text>
-          )}
-          {invoice.clientInfo.phone && String(invoice.clientInfo.phone).trim() !== '' && (
+          ) : null}
+          {invoice.clientInfo.phone && String(invoice.clientInfo.phone).trim() !== '' ? (
             <Text style={styles.contact}>{invoice.clientInfo.phone}</Text>
-          )}
+          ) : null}
         </View>
 
         {/* Invoice Details */}
@@ -270,12 +344,12 @@ export default function InvoiceDetailScreen() {
             <Text style={styles.totalLabel}>Tax:</Text>
             <Text style={styles.totalValue}>€{invoice.taxTotal.toFixed(2)}</Text>
           </View>
-          {invoice.discount && invoice.discount > 0 && (
+          {invoice.discount && invoice.discount > 0 ? (
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Discount:</Text>
               <Text style={styles.totalValue}>-€{invoice.discount.toFixed(2)}</Text>
             </View>
-          )}
+          ) : null}
           <View style={[styles.totalRow, styles.grandTotalRow]}>
             <Text style={styles.grandTotalLabel}>Total:</Text>
             <Text style={styles.grandTotalValue}>€{invoice.grandTotal.toFixed(2)}</Text>
@@ -283,7 +357,7 @@ export default function InvoiceDetailScreen() {
         </View>
 
         {/* Payment Info */}
-        {invoice.paymentInfo.paidAmount > 0 && (
+        {invoice.paymentInfo.paidAmount > 0 ? (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Payment</Text>
             <View style={styles.detailRow}>
@@ -292,24 +366,24 @@ export default function InvoiceDetailScreen() {
                 €{invoice.paymentInfo.paidAmount.toFixed(2)}
               </Text>
             </View>
-            {invoice.paymentInfo.remainingBalance > 0 && (
+            {invoice.paymentInfo.remainingBalance > 0 ? (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Remaining:</Text>
                 <Text style={[styles.detailValue, styles.balanceText]}>
                   €{invoice.paymentInfo.remainingBalance.toFixed(2)}
                 </Text>
               </View>
-            )}
-            {invoice.paymentInfo.paymentDate && String(invoice.paymentInfo.paymentDate).trim() !== '' && (
+            ) : null}
+            {invoice.paymentInfo.paymentDate && String(invoice.paymentInfo.paymentDate).trim() !== '' ? (
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Payment Date:</Text>
                 <Text style={styles.detailValue}>
                   {formatDate(invoice.paymentInfo.paymentDate)}
                 </Text>
               </View>
-            )}
+            ) : null}
           </View>
-        )}
+        ) : null}
       </ScrollView>
 
       {/* Action Buttons */}
@@ -323,7 +397,7 @@ export default function InvoiceDetailScreen() {
             {isGeneratingPDF ? 'Generating...' : '📄 Generate PDF'}
           </Text>
         </TouchableOpacity>
-        {invoice.clientInfo.email && String(invoice.clientInfo.email).trim() !== '' && (
+        {invoice.clientInfo.email && String(invoice.clientInfo.email).trim() !== '' ? (
           <TouchableOpacity
             style={[styles.actionButton, styles.emailButton]}
             onPress={handleSendEmail}
@@ -333,7 +407,7 @@ export default function InvoiceDetailScreen() {
               {isSendingEmail ? 'Sending...' : '✉️ Send Email'}
             </Text>
           </TouchableOpacity>
-        )}
+        ) : null}
         {invoice.status !== 'paid' && (
           <>
             <TouchableOpacity
@@ -350,14 +424,14 @@ export default function InvoiceDetailScreen() {
                 <Text style={styles.actionButtonText}>Mark as Sent</Text>
               </TouchableOpacity>
             )}
-            {invoice.paymentInfo.remainingBalance > 0 && (
+            {invoice.paymentInfo.remainingBalance > 0 ? (
               <TouchableOpacity
                 style={[styles.actionButton, styles.paidButton]}
                 onPress={handleMarkAsPaid}
               >
                 <Text style={styles.actionButtonText}>Mark as Paid</Text>
               </TouchableOpacity>
-            )}
+            ) : null}
           </>
         )}
         <TouchableOpacity
