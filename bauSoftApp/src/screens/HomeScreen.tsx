@@ -13,7 +13,14 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to bauSoft!</Text>
       <Text style={styles.subtitle}>Construction Business Management</Text>
-      
+
+      <TouchableOpacity
+        style={[styles.button, styles.primaryFeature]}
+        onPress={() => navigation.navigate('WorkforceEntry')}
+      >
+        <Text style={styles.buttonText}>👷 Workforce & Site Management</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.navigate('InvoiceList')}
@@ -48,7 +55,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 10,
-    marginTop: 20,
+    marginTop: 16,
+    minWidth: 300,
+    alignItems: 'center',
+  },
+  primaryFeature: {
+    backgroundColor: '#0A6CFF',
   },
   buttonText: {
     color: '#fff',
