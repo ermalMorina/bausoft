@@ -2,14 +2,14 @@ import { createSchema } from "graphql-yoga";
 
 import { YogaInitialContext } from 'graphql-yoga';
 import { PrismaClient } from '@prisma/client';
+import { workforceTypeDefs, workforceResolvers } from './workforce';
 
 // Extend the Yoga context to include the prisma client
 export interface GraphQLContext extends YogaInitialContext {
   prisma: PrismaClient;
 }
 
-export const schema = createSchema({
-  typeDefs: /* GraphQL */ `
+const invoicingTypeDefs = /* GraphQL */ `
     type User {
       id: Int!
       name: String!
@@ -160,8 +160,9 @@ export const schema = createSchema({
       invoiceItems(invoiceId: Int!): [InvoiceItem!]!
       invoiceItem(id: Int!): InvoiceItem
     }
-  `,
-  resolvers: {
+  `;
+
+const invoicingResolvers = {
     // Custom scalar resolvers to ensure dates are serialized as ISO strings
     User: {
       created_at: (parent: any) => {
@@ -729,5 +730,9 @@ export const schema = createSchema({
         return true;
       },
     },
-  },
+};
+
+export const schema = createSchema({
+  typeDefs: [invoicingTypeDefs, workforceTypeDefs],
+  resolvers: [invoicingResolvers, workforceResolvers],
 });

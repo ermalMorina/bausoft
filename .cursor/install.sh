@@ -49,4 +49,7 @@ npm run prisma:generate
 # 6. Seed a default user (the script is a no-op if one already exists).
 ( cd bauSoftBackend && npx ts-node create-default-user.ts ) || true
 
+# 7. Seed the Construction Workforce demo data (idempotent).
+( cd bauSoftBackend && npx ts-node seed-workforce.ts ) || true
+
 echo "bauSoft environment install complete."

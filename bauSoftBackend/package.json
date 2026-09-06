@@ -10,7 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "create-default-user": "ts-node create-default-user.ts"
+    "create-default-user": "ts-node create-default-user.ts",
+    "seed:workforce": "ts-node seed-workforce.ts"
   },
   "keywords": [],
   "author": "",
