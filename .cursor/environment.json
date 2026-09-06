@@ -1,0 +1,16 @@
+{
+  "name": "bauSoft Monorepo",
+  "install": "bash .cursor/install.sh",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "backend",
+      "command": "cd bauSoftBackend && DATABASE_URL=\"${DATABASE_URL:-postgresql://bausoft:bausoft@localhost:5432/bausoft}\" npm run dev"
+    },
+    {
+      "name": "expo-web",
+      "command": "cd bauSoftApp && EXPO_PUBLIC_API_URL=\"http://localhost:4000/graphql\" npx expo start --web --port 8081"
+    }
+  ],
+  "ports": [4000, 8081]
+}
