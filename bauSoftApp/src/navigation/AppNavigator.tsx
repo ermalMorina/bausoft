@@ -9,6 +9,8 @@ import WorkforceEntryScreen from '../screens/workforce/WorkforceEntryScreen';
 import ManagerDashboardScreen from '../screens/workforce/ManagerDashboardScreen';
 import SiteDashboardScreen from '../screens/workforce/SiteDashboardScreen';
 import AttendanceScreen from '../screens/workforce/AttendanceScreen';
+import EmployeesScreen from '../screens/workforce/EmployeesScreen';
+import AssignEmployeeScreen from '../screens/workforce/AssignEmployeeScreen';
 import WorkerHomeScreen from '../screens/workforce/WorkerHomeScreen';
 import DailyReportScreen from '../screens/workforce/DailyReportScreen';
 import ChatScreen from '../screens/workforce/ChatScreen';
@@ -24,6 +26,8 @@ export type RootStackParamList = {
   ManagerDashboard: undefined;
   SiteDashboard: { siteId: number; siteName?: string };
   Attendance: { siteId?: number };
+  Employees: undefined;
+  AssignEmployee: { employeeId: number; employeeName?: string };
   WorkerHome: { employeeId: number };
   DailyReport: { employeeId: number; siteId: number; teamId?: number };
   Chat: { title: string; teamId?: number; siteId?: number; senderId: number };
@@ -56,6 +60,8 @@ export default function AppNavigator() {
         <Stack.Screen name="ManagerDashboard" component={ManagerDashboardScreen} options={{ title: 'Manager Dashboard' }} />
         <Stack.Screen name="SiteDashboard" component={SiteDashboardScreen} options={({ route }) => ({ title: route.params?.siteName || 'Site' })} />
         <Stack.Screen name="Attendance" component={AttendanceScreen} options={{ title: 'Attendance' }} />
+        <Stack.Screen name="Employees" component={EmployeesScreen} options={{ title: 'Employees' }} />
+        <Stack.Screen name="AssignEmployee" component={AssignEmployeeScreen} options={({ route }) => ({ title: route.params?.employeeName ? `Assign ${route.params.employeeName.split(' ')[0]}` : 'Assign' })} />
         <Stack.Screen name="WorkerHome" component={WorkerHomeScreen} options={{ title: 'My Work' }} />
         <Stack.Screen name="DailyReport" component={DailyReportScreen} options={{ title: 'Daily Report' }} />
         <Stack.Screen name="Chat" component={ChatScreen} options={({ route }) => ({ title: route.params?.title || 'Chat' })} />

@@ -80,6 +80,38 @@ export const workforceApi = {
       (d) => d.employees
     ),
 
+  // Employee & team management
+  listEmployees: () =>
+    gql(`{
+      employees {
+        id name role position employment_status
+        current_site { id name }
+        current_team { id name }
+      }
+    }`).then((d) => d.employees),
+
+  getEmployee: (id: number) =>
+    gql(
+      `query($id:Int!){ employee(id:$id){ id name role position employment_status current_site { id name } current_team { id name } } }`,
+      { id }
+    ).then((d) => d.employee),
+
+  getTeams: (siteId?: number) =>
+    gql(`query($id:Int){ teams(siteId:$id){ id name status site { id name } leader { name } members { id } } }`, {
+      id: siteId,
+    }).then((d) => d.teams),
+
+  assignEmployee: (employeeId: number, siteId: number, teamId?: number) =>
+    gql(
+      `mutation($e:Int!,$s:Int!,$t:Int){ assignEmployee(employeeId:$e,siteId:$s,teamId:$t){ id employee { name current_site { name } current_team { name } } } }`,
+      { e: employeeId, s: siteId, t: teamId }
+    ).then((d) => d.assignEmployee),
+
+  createTeam: (input: { name: string; site_id?: number; leader_id?: number }) =>
+    gql(`mutation($i:TeamInput!){ createTeam(input:$i){ id name site_id } }`, { i: input }).then(
+      (d) => d.createTeam
+    ),
+
   // Tasks
   getSiteTasks: (siteId: number) =>
     gql(

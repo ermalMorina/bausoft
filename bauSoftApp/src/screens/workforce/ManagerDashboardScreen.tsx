@@ -53,11 +53,17 @@ export default function ManagerDashboardScreen() {
         </View>
       </Card>
 
+      <View style={styles.quickRow}>
+        <TouchableOpacity style={styles.quickBtn} onPress={() => navigation.navigate('Employees')}>
+          <Text style={styles.quickText}>👥 Manage Employees & Teams</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.quickBtn, styles.quickAlt]} onPress={() => navigation.navigate('Attendance', {})}>
+          <Text style={[styles.quickText, { color: colors.primary }]}>🕒 Attendance</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.rowBetween}>
         <Text style={styles.section}>Construction Sites</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Attendance', {})}>
-          <Text style={styles.link}>Attendance ›</Text>
-        </TouchableOpacity>
       </View>
 
       {(data?.sites || []).map((s: any) => (
@@ -91,4 +97,8 @@ const styles = StyleSheet.create({
   open: { color: colors.primary, fontWeight: '600', marginTop: 10 },
   link: { color: colors.primary, fontWeight: '700' },
   error: { color: colors.red, marginBottom: 10 },
+  quickRow: { flexDirection: 'row', gap: 12, marginTop: 14 },
+  quickBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  quickAlt: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
+  quickText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 });
