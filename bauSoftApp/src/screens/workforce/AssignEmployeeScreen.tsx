@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
@@ -23,6 +23,7 @@ export default function AssignEmployeeScreen() {
   const [showNewTeam, setShowNewTeam] = useState(false);
   const [newTeamName, setNewTeamName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   const load = useCallback(() => {
     setError(null);
@@ -54,6 +55,7 @@ export default function AssignEmployeeScreen() {
     const name = newTeamName.trim();
     if (!name || !siteId) return;
     setSubmitting(true);
+    setMsg(null);
     try {
       const t = await workforceApi.createTeam({ name, site_id: siteId });
       setNewTeamName('');
@@ -62,7 +64,7 @@ export default function AssignEmployeeScreen() {
       setTeams(refreshed);
       setTeamId(t.id);
     } catch (e: any) {
-      Alert.alert('Error', e.message);
+      setMsg(e.message);
     } finally {
       setSubmitting(false);
     }
@@ -70,22 +72,18 @@ export default function AssignEmployeeScreen() {
 
   const assign = async () => {
     if (!siteId) {
-      Alert.alert('Pick a site', 'Select a construction site first.');
+      setMsg('Select a construction site first.');
       return;
     }
     setSubmitting(true);
+    setMsg(null);
     try {
-      const res = await workforceApi.assignEmployee(employeeId, siteId, teamId ?? undefined);
-      const site = res.employee?.current_site?.name;
-      const team = res.employee?.current_team?.name;
-      Alert.alert(
-        'Assigned',
-        `${res.employee?.name} is now on ${team || 'no team'} at ${site || 'the site'}.`,
-        [{ text: 'OK', onPress: () => navigation.goBack() }]
-      );
+      await workforceApi.assignEmployee(employeeId, siteId, teamId ?? undefined);
+      // Navigate back directly (works on web + native); the Employees list
+      // refreshes on focus and reflects the new team/site.
+      navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
+      setMsg(e.message);
       setSubmitting(false);
     }
   };
@@ -150,6 +148,7 @@ export default function AssignEmployeeScreen() {
         </>
       )}
 
+      {msg && <Text style={styles.msg}>{msg}</Text>}
       <TouchableOpacity style={[styles.assignBtn, (!siteId || submitting) && styles.assignDisabled]} onPress={assign} disabled={!siteId || submitting}>
         {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.assignText}>Assign to team</Text>}
       </TouchableOpacity>
@@ -180,4 +179,5 @@ const styles = StyleSheet.create({
   assignDisabled: { opacity: 0.5, backgroundColor: colors.gray },
   assignText: { color: '#fff', fontWeight: '800', fontSize: 16 },
   note: { color: colors.gray, fontSize: 12, textAlign: 'center', marginTop: 10 },
+  msg: { color: colors.red, textAlign: 'center', marginTop: 16, fontWeight: '600' },
 });

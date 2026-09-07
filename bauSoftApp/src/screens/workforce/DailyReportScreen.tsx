@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
@@ -33,13 +33,15 @@ export default function DailyReportScreen() {
   const [issues, setIssues] = useState('');
   const [materials, setMaterials] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   const submit = async () => {
     if (!completed && !inProgress) {
-      Alert.alert('Add some detail', 'Please describe what you completed or worked on.');
+      setMsg('Please describe what you completed or worked on.');
       return;
     }
     setSubmitting(true);
+    setMsg(null);
     try {
       await workforceApi.submitDailyReport({
         site_id: params.siteId,
@@ -47,12 +49,9 @@ export default function DailyReportScreen() {
         employee_id: params.employeeId,
         completed, in_progress: inProgress, planned_next: plannedNext, notes, issues, materials,
       });
-      Alert.alert('Submitted', 'Your daily report has been submitted.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
+      setMsg(e.message);
       setSubmitting(false);
     }
   };
@@ -69,6 +68,7 @@ export default function DailyReportScreen() {
         <Field label="📝 Notes" value={notes} onChange={setNotes} placeholder="Anything worth noting" lines={2} />
         <Field label="⚠️ Issues / problems" value={issues} onChange={setIssues} placeholder="e.g. Missing plastering material" lines={2} />
       </Card>
+      {msg && <Text style={styles.msg}>{msg}</Text>}
       <TouchableOpacity style={[styles.submit, submitting && { opacity: 0.6 }]} onPress={submit} disabled={submitting}>
         {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Submit Report</Text>}
       </TouchableOpacity>
@@ -85,4 +85,5 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 10, color: colors.text, backgroundColor: '#fff', textAlignVertical: 'top' },
   submit: { backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  msg: { color: colors.red, textAlign: 'center', marginBottom: 12, fontWeight: '600' },
 });

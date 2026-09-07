@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
@@ -15,20 +15,19 @@ export default function ReportIssueScreen() {
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('MEDIUM');
   const [submitting, setSubmitting] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
 
   const submit = async () => {
-    if (!title.trim()) { Alert.alert('Title required', 'Please describe the problem briefly.'); return; }
+    if (!title.trim()) { setMsg('Please describe the problem briefly.'); return; }
     setSubmitting(true);
+    setMsg(null);
     try {
       await workforceApi.createIssue({
         site_id: params.siteId, reported_by_id: params.reporterId, title: title.trim(), description, priority,
       });
-      Alert.alert('Reported', 'Your issue has been reported. The supervisor has been notified.', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message);
-    } finally {
+      setMsg(e.message);
       setSubmitting(false);
     }
   };
@@ -51,6 +50,7 @@ export default function ReportIssueScreen() {
           ))}
         </View>
       </Card>
+      {msg && <Text style={styles.msg}>{msg}</Text>}
       <TouchableOpacity style={[styles.submit, submitting && { opacity: 0.6 }]} onPress={submit} disabled={submitting}>
         {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Submit Issue</Text>}
       </TouchableOpacity>
@@ -72,4 +72,5 @@ const styles = StyleSheet.create({
   prioTextActive: { color: '#fff' },
   submit: { backgroundColor: colors.red, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 4 },
   submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  msg: { color: colors.red, textAlign: 'center', marginBottom: 12, fontWeight: '600' },
 });
