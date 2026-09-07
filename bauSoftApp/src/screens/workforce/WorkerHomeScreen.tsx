@@ -4,7 +4,7 @@ import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navig
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
-import { colors, Card, StatusBadge, fmtTime } from '../../workforce/ui';
+import { colors, Card, StatusBadge, fmtTime, Loading, ErrorView } from '../../workforce/ui';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type R = RouteProp<RootStackParamList, 'WorkerHome'>;
@@ -20,9 +20,15 @@ export default function WorkerHomeScreen() {
   const [home, setHome] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    workforceApi.getWorkerHome(employeeId).then(setHome).finally(() => setLoading(false));
+    setError(null);
+    workforceApi
+      .getWorkerHome(employeeId)
+      .then(setHome)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, [employeeId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -52,9 +58,8 @@ export default function WorkerHomeScreen() {
     catch (e: any) { Alert.alert('Error', e.message); } finally { setBusy(false); }
   };
 
-  if (loading && !home) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
-  }
+  if (loading && !home) return <Loading />;
+  if (error && !home) return <ErrorView message={error} onRetry={() => { setLoading(true); load(); }} />;
 
   const emp = home?.employee;
   const site = home?.site;

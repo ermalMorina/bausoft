@@ -4,7 +4,7 @@ import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navig
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
-import { colors, Card, StatTile, StatusBadge, fmtTime } from '../../workforce/ui';
+import { colors, Card, StatTile, StatusBadge, fmtTime, Loading, ErrorView } from '../../workforce/ui';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type R = RouteProp<RootStackParamList, 'SiteDashboard'>;
@@ -23,8 +23,10 @@ export default function SiteDashboardScreen() {
   const [issues, setIssues] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    setError(null);
     Promise.all([
       workforceApi.getSiteDashboard(siteId),
       workforceApi.getSiteTasks(siteId),
@@ -35,14 +37,14 @@ export default function SiteDashboardScreen() {
       .then(([d, t, a, i, tl]) => {
         setDash(d); setTasks(t); setAttendance(a); setIssues(i); setTimeline(tl);
       })
+      .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [siteId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading && !dash) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
-  }
+  if (loading && !dash) return <Loading />;
+  if (error && !dash) return <ErrorView message={error} onRetry={() => { setLoading(true); load(); }} />;
 
   return (
     <View style={styles.container}>

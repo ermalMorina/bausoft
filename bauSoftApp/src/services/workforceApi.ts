@@ -1,14 +1,37 @@
 /**
  * GraphQL client for the Construction Workforce & Site Management feature.
  */
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/graphql';
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/graphql';
+
+const TIMEOUT_MS = 12000;
 
 async function gql<T = any>(query: string, variables?: Record<string, any>): Promise<T> {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, variables }),
-  });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, variables }),
+      signal: controller.signal,
+    });
+  } catch (e: any) {
+    // Network-level failure: unreachable host, blocked cleartext, timeout, etc.
+    const reason = e?.name === 'AbortError' ? 'timed out' : 'failed';
+    throw new Error(
+      `Can't reach the backend at ${API_URL} (request ${reason}). ` +
+        `Make sure the backend is running and, on a physical device, that EXPO_PUBLIC_API_URL ` +
+        `points to your computer's LAN IP (not localhost).`
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+
+  if (!res.ok) {
+    throw new Error(`Backend returned HTTP ${res.status} from ${API_URL}`);
+  }
+
   const json = await res.json();
   if (json.errors) {
     throw new Error(json.errors[0]?.message || 'GraphQL error');

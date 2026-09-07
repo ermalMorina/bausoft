@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
-import { colors, Card, StatTile, StatusBadge } from '../../workforce/ui';
+import { colors, Card, StatTile, StatusBadge, Loading, ErrorView } from '../../workforce/ui';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -26,9 +26,8 @@ export default function ManagerDashboardScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading && !data) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
-  }
+  if (loading && !data) return <Loading />;
+  if (error && !data) return <ErrorView message={error} onRetry={() => { setLoading(true); load(); }} />;
 
   return (
     <ScrollView

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl }
 import { useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
-import { colors, Card, StatusBadge, fmtTime } from '../../workforce/ui';
+import { colors, Card, StatusBadge, fmtTime, Loading, ErrorView } from '../../workforce/ui';
 
 type R = RouteProp<RootStackParamList, 'Attendance'>;
 
@@ -12,19 +12,21 @@ export default function AttendanceScreen() {
   const siteId = params?.siteId;
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
+    setError(null);
     workforceApi
       .getAttendance({ siteId, today: true })
       .then(setRows)
+      .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [siteId]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  if (loading && rows.length === 0) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={colors.primary} /></View>;
-  }
+  if (loading && rows.length === 0) return <Loading />;
+  if (error && rows.length === 0) return <ErrorView message={error} onRetry={() => { setLoading(true); load(); }} />;
 
   const working = rows.filter((r) => !r.check_out).length;
   const done = rows.filter((r) => r.check_out).length;

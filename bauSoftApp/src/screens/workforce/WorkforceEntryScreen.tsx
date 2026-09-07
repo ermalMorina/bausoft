@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { workforceApi } from '../../services/workforceApi';
-import { colors, Card } from '../../workforce/ui';
+import { colors, Card, ErrorView } from '../../workforce/ui';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -14,13 +14,17 @@ export default function WorkforceEntryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
+    setError(null);
     workforceApi
       .getWorkers()
       .then((w) => setWorkers(w))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
@@ -38,7 +42,7 @@ export default function WorkforceEntryScreen() {
 
       <Text style={styles.section}>Open worker app as…</Text>
       {loading && <ActivityIndicator color={colors.primary} style={{ marginTop: 20 }} />}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && !loading && <ErrorView message={error} onRetry={load} />}
       {workers.map((w) => (
         <TouchableOpacity
           key={w.id}

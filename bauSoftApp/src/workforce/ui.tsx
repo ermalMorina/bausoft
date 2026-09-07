@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { API_URL } from '../services/workforceApi';
 
 export const colors = {
   primary: '#0A6CFF',
@@ -58,6 +59,29 @@ export function StatTile({ label, value, accent }: { label: string; value: React
   );
 }
 
+export function Loading() {
+  return (
+    <View style={styles.center}>
+      <ActivityIndicator size="large" color={colors.primary} />
+    </View>
+  );
+}
+
+export function ErrorView({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  return (
+    <View style={styles.center}>
+      <Text style={styles.errTitle}>Couldn't load data</Text>
+      <Text style={styles.errMsg}>{message}</Text>
+      <Text style={styles.errUrl}>Backend: {API_URL}</Text>
+      {onRetry && (
+        <TouchableOpacity style={styles.retry} onPress={onRetry}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
 export function fmtTime(iso?: string | null) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -83,4 +107,10 @@ const styles = StyleSheet.create({
   stat: { flex: 1, minWidth: 90, alignItems: 'center', paddingVertical: 8 },
   statValue: { fontSize: 26, fontWeight: '800', color: colors.text },
   statLabel: { fontSize: 12, color: colors.muted, marginTop: 2, textAlign: 'center' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg, padding: 24 },
+  errTitle: { fontSize: 18, fontWeight: '800', color: colors.text, marginBottom: 8 },
+  errMsg: { fontSize: 14, color: colors.muted, textAlign: 'center', lineHeight: 20 },
+  errUrl: { fontSize: 12, color: colors.gray, marginTop: 12, textAlign: 'center' },
+  retry: { marginTop: 18, backgroundColor: colors.primary, borderRadius: 10, paddingHorizontal: 28, paddingVertical: 12 },
+  retryText: { color: '#fff', fontWeight: '700', fontSize: 15 },
 });
