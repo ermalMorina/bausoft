@@ -19,7 +19,13 @@ export default function WorkforceEntryScreen() {
     setError(null);
     workforceApi
       .getWorkers()
-      .then((w) => setWorkers(w))
+      .then((w) => {
+        // Show assigned workers first so a tester lands on a fully-functional worker.
+        const sorted = [...w].sort(
+          (a, b) => (b.current_site ? 1 : 0) - (a.current_site ? 1 : 0)
+        );
+        setWorkers(sorted);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   };

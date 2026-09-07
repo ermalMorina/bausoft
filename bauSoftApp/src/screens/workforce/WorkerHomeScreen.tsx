@@ -74,6 +74,18 @@ export default function WorkerHomeScreen() {
         <Text style={styles.siteLine}>No site assigned</Text>
       )}
 
+      {home && !site && (
+        <Card style={{ marginTop: 14, backgroundColor: '#FEF3F2', borderColor: '#FECDCA' }}>
+          <Text style={styles.noticeTitle}>You're not assigned to a site yet</Text>
+          <Text style={styles.noticeBody}>
+            Check-in, daily report, chat and tasks stay disabled until a manager assigns you to a
+            construction site and team. If you're just trying the app, seed demo data on the backend
+            (run <Text style={styles.mono}>npm run seed:workforce</Text>) and pick a worker that shows a
+            site and team on the previous screen.
+          </Text>
+        </Card>
+      )}
+
       <Card style={{ marginTop: 14 }}>
         <View style={styles.rowBetween}>
           <View style={styles.statusPillWrap}>
@@ -86,7 +98,7 @@ export default function WorkerHomeScreen() {
         {home?.team && <Text style={styles.teamLine}>👥 {home.team.name}</Text>}
 
         <TouchableOpacity
-          style={[styles.bigBtn, { backgroundColor: checkedIn ? colors.red : colors.green }, busy && { opacity: 0.6 }]}
+          style={[styles.bigBtn, { backgroundColor: checkedIn ? colors.red : colors.green }, (busy || !site) && styles.disabled]}
           disabled={busy || !site}
           onPress={checkedIn ? doCheckOut : doCheckIn}
         >
@@ -131,18 +143,18 @@ export default function WorkerHomeScreen() {
       <Text style={styles.hint}>Tap a task to advance its status</Text>
 
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('DailyReport', { employeeId, siteId: site?.id, teamId: home?.team?.id })} disabled={!site}>
+        <TouchableOpacity style={[styles.actionBtn, !site && styles.disabled]} onPress={() => navigation.navigate('DailyReport', { employeeId, siteId: site?.id, teamId: home?.team?.id })} disabled={!site}>
           <Text style={styles.actionText}>📝 Daily Report</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Chat', { title: home?.team?.name || 'Team Chat', teamId: home?.team?.id, senderId: employeeId })} disabled={!home?.team}>
+        <TouchableOpacity style={[styles.actionBtn, !home?.team && styles.disabled]} onPress={() => navigation.navigate('Chat', { title: home?.team?.name || 'Team Chat', teamId: home?.team?.id, senderId: employeeId })} disabled={!home?.team}>
           <Text style={styles.actionText}>💬 Team Chat</Text>
         </TouchableOpacity>
       </View>
       <View style={styles.actionsRow}>
-        <TouchableOpacity style={[styles.actionBtn, styles.actionAlt]} onPress={() => navigation.navigate('ReportIssue', { siteId: site?.id, reporterId: employeeId })} disabled={!site}>
+        <TouchableOpacity style={[styles.actionBtn, styles.actionAlt, !site && styles.disabled]} onPress={() => navigation.navigate('ReportIssue', { siteId: site?.id, reporterId: employeeId })} disabled={!site}>
           <Text style={[styles.actionText, { color: colors.red }]}>⚠️ Report Issue</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.actionAlt]} onPress={() => navigation.navigate('Chat', { title: `${site?.name} — Site`, siteId: site?.id, senderId: employeeId })} disabled={!site}>
+        <TouchableOpacity style={[styles.actionBtn, styles.actionAlt, !site && styles.disabled]} onPress={() => navigation.navigate('Chat', { title: `${site?.name} — Site`, siteId: site?.id, senderId: employeeId })} disabled={!site}>
           <Text style={[styles.actionText, { color: colors.primary }]}>🏗️ Site Chat</Text>
         </TouchableOpacity>
       </View>
@@ -184,4 +196,8 @@ const styles = StyleSheet.create({
   actionBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 12 },
   actionAlt: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
   actionText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  disabled: { opacity: 0.4 },
+  noticeTitle: { color: colors.red, fontWeight: '800', fontSize: 15 },
+  noticeBody: { color: colors.muted, marginTop: 6, fontSize: 13, lineHeight: 19 },
+  mono: { fontWeight: '700', color: colors.text },
 });
