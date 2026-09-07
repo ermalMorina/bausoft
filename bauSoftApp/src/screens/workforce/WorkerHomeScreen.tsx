@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
   actionBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginBottom: 12 },
   actionAlt: { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border },
   actionText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  disabled: { opacity: 0.4 },
+  disabled: { opacity: 0.5, backgroundColor: colors.gray, borderColor: colors.gray },
   noticeTitle: { color: colors.red, fontWeight: '800', fontSize: 15 },
   noticeBody: { color: colors.muted, marginTop: 6, fontSize: 13, lineHeight: 19 },
   mono: { fontWeight: '700', color: colors.text },
